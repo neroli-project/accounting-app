@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ハルの青色申告アプリ</title>
+  <style>
+    /* 全体のスタイル */
+    body {
+      font-family: sans-serif;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 16px;
+      background-color: #f4f6f8;
+      color: #333;
+    }
+    h1 { text-align: center; font-size: 1.5rem; color: #2c3e50; }
+    .card {
+      background: #fff;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 16px;
+      font-weight: bold;
+    }
+    
+    /* 1. ハル（AI）エリア */
+    .ai-section { text-align: center; background: #eef6ff; }
+    .btn-voice {
+      background: #3b82f6; color: #fff; font-size: 1.1rem;
+      width: 100%; padding: 12px; margin-top: 8px;
+    }
+
+    /* 2. 手入力フォーム */
+    .form-group { margin-bottom: 10px; }
+    .form-group label { display: block; font-size: 0.85rem; margin-bottom: 4px; }
+    .form-group input, .form-group select {
+      width: 100%; padding: 8px; box-sizing: border-box;
+      border: 1px solid #ccc; border-radius: 4px;
+    }
+    .btn-add { background: #10b981; color: #fff; width: 100%; margin-top: 8px; }
+
+    /* 3. タブ切り替えボタン */
+    .tab-menu { display: flex; gap: 8px; margin-bottom: 12px; }
+    .btn-tab {
+      flex: 1; background: #e5e7eb; color: #374151; padding: 10px 4px; font-size: 0.85rem;
+    }
+    .btn-tab.active { background: #4b5563; color: #fff; }
+
+    /* 表示エリアのタブ切り替え制御 */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* テーブルデザイン */
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th, td { border-bottom: 1px solid #eee; padding: 8px; text-align: left; }
+    th { background: #f9fafb; }
+    .btn-action { padding: 4px 8px; font-size: 0.75rem; margin-right: 4px; }
+    .btn-edit { background: #f59e0b; color: #fff; }
+    .btn-delete { background: #ef4444; color: #fff; }
+  </style>
+</head>
+<body>
+
+  <h1>🌸 ハルの青色申告</h1>
+
+  <!-- 1. ハル（AI）と話して入力 -->
+  <div class="card ai-section">
+    <h3>🤖 ハルに話しかけて入力</h3>
+    <button class="btn-voice" onclick="alert('音声入力（またはチャット）の処理をここにつなぐよ！')">
+      🎤 声で入力する
+    </button>
+  </div>
+
+  <!-- 2. 手入力フォーム -->
+  <div class="card">
+    <h3>✍️ 手入力フォーム</h3>
+    <div class="form-group">
+      <label>日付</label>
+      <input type="date" id="input-date" value="2026-09-03">
+    </div>
+    <div class="form-group">
+      <label>勘定科目</label>
+      <select id="input-category">
+        <option value="売上">売上</option>
+        <option value="消耗品費">消耗品費</option>
+        <option value="交通費">交通費</option>
+        <option value="印刷費">印刷費</option>
+        <option value="家賃">家賃</option>
+        <option value="光熱費">光熱費</option>
+        <option value="研修費">研修費</option>
+        <option value="事務用品費">事務用品費</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>金額 (円)</label>
+    <input type="number" id="input-amount" value="500" placeholder="500">
+    </div>
+    <div class="form-group">
+      <label>支払元 / 受取先</label>
+      <select id="input-credit">
+        <option value="事業主借">事業主借 (ポケットマネー)</option>
+        <option value="現金">現金 (事業用現金)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>メモ</label>
+      <input type="text" id="input-memo" placeholder="ノート代など">
+    </div>
+    <button id="btn-save" class="btn-add" onclick="saveEntry()">＋ 登録する</button>
+  </div>
+
+  <!-- 3. 表示切替メニュー -->
+  <div class="tab-menu">
+    <button class="btn-tab active" onclick="switchTab('list', this)">📋 入力一覧</button>
+    <button class="btn-tab" onclick="switchTab('bs', this)">⚖️ 貸借対照表</button>
+    <button class="btn-tab" onclick="switchTab('pl', this)">📈 損益計算書</button>
+  </div>
+
+  <!-- 4. 表示エリア -->
+  <div class="card">
+    <!-- 今までの入力一覧 -->
+    <div id="tab-list" class="tab-content active">
+      <h4>入力済みデータ一覧</h4>
+      <table>
+        <thead>
+          <tr>
+            <th>日付</th>
+            <th>科目</th>
+            <th>金額</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- JavaScriptでここに入力データが追加されます -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 貸借対照表 (B/S) -->
+    <div id="tab-bs" class="tab-content">
+      <!-- JavaScriptでここが集計されます -->
+    </div>
+
+    <!-- 損益計算書 (P/L) -->
+    <div id="tab-pl" class="tab-content">
+      <!-- JavaScriptでここが集計されます -->
+    </div>
+  </div>
+
+  <!-- 別ファイルの script.js を読み込む -->
+  <script src="script.js"></script>
+</body>
+</html>
