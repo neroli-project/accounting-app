@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
-  // CORS設定（ブラウザからの通信を許可）
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -14,16 +13,16 @@ export default async function handler(req, res) {
 
   try {
     const { message } = req.body;
-    const apiKey = process.env.GEMINI_API_KEY; // サーバーの環境変数からAPIキーを取得
+    const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
+      console.error('API_KEY_MISSING: GEMINI_API_KEY is not set in Vercel environment variables.');
       return res.status(500).json({ error: 'APIキーが設定されていません' });
     }
 
-    // ハル（AI）へのプロンプト（命令書）
     const systemInstruction = `
 あなた個人事業主の青色申告をサポートするAIアシスタントの「ハル」です。
-ユーザーの発言から仕訳情報を抽出し、必ず以下のJSONフォーマットのみで返答してください。
+ユーザーの発言から仕訳情報を抽出し、必ず以下のJSON形式のみで返答してください。余計な解説は不要です。
 
 【選択可能な勘定科目】
 - 売上
@@ -36,12 +35,12 @@ export default async function handler(req, res) {
 - 事務用品費
 
 【選択可能な貸方科目】
-- 事業主借（ポケットマネーからの支払いの場合）
-- 現金（事業用現金からの支払い、または売上受取の場合）
+- 事業主借
+- 現金
 
 【出力用JSONフォーマット】
 {
-  "date": "YYYY-MM-DD", // 発言から日付が不明な場合は本日の日付「2026-09-03」
+  "date": "2026-09-03",
   "category": "勘定科目名",
   "amount": 数値,
   "credit": "貸方科目名",
@@ -49,28 +48,31 @@ export default async function handler(req, res) {
 }
 `;
 
-    // Gemini APIに送信
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{
-          parts: [{ text: `${systemInstruction}\n\nユーザーの発言: "${message}"` }]
-        }],
-        generationConfig: {
-          responseMimeType: "application/json" // 必ずJSONで返させる
-        }
+          parts: [{ text: `${systemInstruction}\n\n入力: "${message}"` }]
+        }]
       })
     });
 
     const data = await response.json();
-    const resultText = data.candidates[0].content.parts[0].text;
 
-    // AIからのレスポンス（JSON文字列）をパースして返却
+    // エラーレスポンスの場合はログに出力
+    if (!response.ok || !data.candidates || !data.candidates[0]) {
+      console.error('Gemini API Error Detail:', JSON.stringify(data));
+      return res.status(500).json({ error: 'Gemini APIからの応答エラー', details: data });
+    }
+
+    let resultText = data.candidates[0].content.parts[0].text;
+    resultText = resultText.replace(/```json/g, '').replace(/```/g, '').trim();
+
     return res.status(200).json(JSON.parse(resultText));
 
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: 'ハルの処理中にエラーが発生しました' });
+    console.error('Server Processing Error:', error);
+    return res.status(500).json({ error: '処理中にエラーが発生しました', message: error.message });
   }
 }
