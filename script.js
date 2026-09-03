@@ -210,3 +210,69 @@ function switchTab(tabName, element) {
 window.addEventListener('DOMContentLoaded', () => {
   render();
 });
+
+
+// --- 7. ハル（AI）と話して自動仕訳する処理 ---
+async function startVoiceInput() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  
+  if (!SpeechRecognition) {
+    const userText = prompt("ハルに伝える内容を入力してね！（例: 今日カフェで仕事して1000円払ったよ）");
+    if (userText) {
+      await sendToHaru(userText);
+    }
+    return;
+  }
+
+  const recognition = new SpeechRecognition();
+  recognition.lang = 'ja-JP';
+
+  alert('🎤 お話ししてください！（話し終わると自動で送信されます）');
+
+  recognition.onresult = async (event) => {
+    const text = event.results[0][0].transcript;
+    alert(`「${text}」って言ったね！ハルが仕訳を考えているよ...`);
+    await sendToHaru(text);
+  };
+
+  recognition.onerror = (event) => {
+    alert('音声の聞き取りに失敗しちゃいました。もう一度試してみてね！');
+  };
+
+  recognition.start();
+}
+
+async function sendToHaru(userMessage) {
+  try {
+    const response = await fetch('/api/haru', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: userMessage })
+    });
+
+    if (!response.ok) {
+      throw new Error('サーバーエラー');
+    }
+
+    const haruResult = await response.json();
+
+    const newEntry = {
+      id: Date.now(),
+      date: haruResult.date || new Date().toISOString().split('T')[0],
+      category: haruResult.category || '消耗品費',
+      amount: Number(haruResult.amount) || 0,
+      credit: haruResult.credit || '事業主借',
+      memo: haruResult.memo || userMessage
+    };
+
+    journalEntries.push(newEntry);
+    saveToStorage();
+    render();
+
+    alert(`✨ ハルが仕訳を登録したよ！\n【科目】${newEntry.category}\n【金額】${newEntry.amount}円`);
+
+  } catch (error) {
+    console.error(error);
+    alert('ハルとの通信でエラーが発生しちゃった...もう一度試してみて！');
+  }
+}
