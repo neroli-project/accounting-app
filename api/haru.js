@@ -1,4 +1,5 @@
 export default async function handler(req, res) {
+  // CORS設定（ブラウザからの通信を許可）
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -48,7 +49,8 @@ export default async function handler(req, res) {
 }
 `;
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+    // Gemini APIへのリクエスト（gemini-flash-latest を使用）
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -60,7 +62,6 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    // エラーレスポンスの場合はログに出力
     if (!response.ok || !data.candidates || !data.candidates[0]) {
       console.error('Gemini API Error Detail:', JSON.stringify(data));
       return res.status(500).json({ error: 'Gemini APIからの応答エラー', details: data });
