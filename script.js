@@ -213,21 +213,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 
 // --- 7. ハル（AI）と話して自動仕訳する処理 ---
-function showHaruStatus(message, icon = '🤖') {
-  const modal = document.getElementById('haru-status-modal');
-  const msgEl = document.getElementById('haru-status-msg');
-  const iconEl = document.getElementById('haru-status-icon');
-  if (modal && msgEl && iconEl) {
-    msgEl.textContent = message;
-    iconEl.textContent = icon;
-    modal.style.display = 'flex';
-  }
-}
-
-function hideHaruStatus() {
-  const modal = document.getElementById('haru-status-modal');
-  if (modal) modal.style.display = 'none';
-}
+let recognitionInstance = null; // マイクのインスタンスを保持する変数
 
 async function startVoiceInput() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -240,20 +226,36 @@ async function startVoiceInput() {
     return;
   }
 
+  // 既に動いているマイクがあれば一回安全に停止する
+  if (recognitionInstance) {
+    try { recognitionInstance.stop(); } catch(e) {}
+  }
+
   const recognition = new SpeechRecognition();
+  recognitionInstance = recognition; // インスタンスを保持
   recognition.lang = 'ja-JP';
+  recognition.continuous = false; // 一回話し終わったら自動で終了する設定
 
   showHaruStatus('お話ししてください…👂', '🎤');
 
   recognition.onresult = async (event) => {
     const text = event.results[0][0].transcript;
+    // 聞き取りが終わったので明示的にマイクをOFFにする
+    recognition.stop();
+    
     showHaruStatus(`「${text}」を聞き取りました！仕訳を考えています…`, '🤖');
     await sendToHaru(text);
   };
 
   recognition.onerror = () => {
+    recognition.stop(); // エラー時も確実にマイクをOFF
     showHaruStatus('聞き取りに失敗しました。もう一度ためしてね！', '😅');
     setTimeout(hideHaruStatus, 2000);
+  };
+
+  // 音声認識が終了したイベント（ここで確実にマイクを解放）
+  recognition.onend = () => {
+    recognitionInstance = null;
   };
 
   recognition.start();
