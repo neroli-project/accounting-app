@@ -49,8 +49,8 @@ export default async function handler(req, res) {
 }
 `;
 
-    // Gemini APIへのリクエスト（gemini-flash-latest を使用）
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`, {
+    // Gemini 2.5 Flash モデルを使用
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
