@@ -244,7 +244,7 @@ async function startVoiceInput() {
 
 async function sendToHaru(userMessage) {
   try {
-    const response = await fetch('/api/haru', {
+   const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: userMessage })
