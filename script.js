@@ -213,6 +213,22 @@ window.addEventListener('DOMContentLoaded', () => {
 
 
 // --- 7. ハル（AI）と話して自動仕訳する処理 ---
+function showHaruStatus(message, icon = '🤖') {
+  const modal = document.getElementById('haru-status-modal');
+  const msgEl = document.getElementById('haru-status-msg');
+  const iconEl = document.getElementById('haru-status-icon');
+  if (modal && msgEl && iconEl) {
+    msgEl.textContent = message;
+    iconEl.textContent = icon;
+    modal.style.display = 'flex';
+  }
+}
+
+function hideHaruStatus() {
+  const modal = document.getElementById('haru-status-modal');
+  if (modal) modal.style.display = 'none';
+}
+
 async function startVoiceInput() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   
@@ -227,16 +243,17 @@ async function startVoiceInput() {
   const recognition = new SpeechRecognition();
   recognition.lang = 'ja-JP';
 
-  alert('🎤 お話ししてください！（話し終わると自動で送信されます）');
+  showHaruStatus('お話ししてください…👂', '🎤');
 
   recognition.onresult = async (event) => {
     const text = event.results[0][0].transcript;
-    alert(`「${text}」って言ったね！ハルが仕訳を考えているよ...`);
+    showHaruStatus(`「${text}」を聞き取りました！仕訳を考えています…`, '🤖');
     await sendToHaru(text);
   };
 
-  recognition.onerror = (event) => {
-    alert('音声の聞き取りに失敗しちゃいました。もう一度試してみてね！');
+  recognition.onerror = () => {
+    showHaruStatus('聞き取りに失敗しました。もう一度ためしてね！', '😅');
+    setTimeout(hideHaruStatus, 2000);
   };
 
   recognition.start();
@@ -269,10 +286,13 @@ async function sendToHaru(userMessage) {
     saveToStorage();
     render();
 
-    alert(`✨ ハルが仕訳を登録したよ！\n【科目】${newEntry.category}\n【金額】${newEntry.amount}円`);
+    // 成功通知を出して自動で閉じる
+    showHaruStatus(`仕訳を登録しました！\n【${newEntry.category}】${newEntry.amount}円`, '✨');
+    setTimeout(hideHaruStatus, 2000);
 
   } catch (error) {
     console.error(error);
-    alert('ハルとの通信でエラーが発生しちゃった...もう一度試してみて！');
+    showHaruStatus('通信エラーが発生しました…もう一度試してみてね！', '⚠️');
+    setTimeout(hideHaruStatus, 2500);
   }
 }

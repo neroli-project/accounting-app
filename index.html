@@ -156,5 +156,13 @@
 
   <!-- 別ファイルの script.js を読み込む -->
   <script src="script.js"></script>
+
+<!-- ハルの思考中＆結果用オーバーレイ -->
+  <div id="haru-status-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+    <div style="background: white; padding: 24px; border-radius: 12px; text-align: center; max-width: 300px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+      <div id="haru-status-icon" style="font-size: 40px; margin-bottom: 12px;">🤖</div>
+      <div id="haru-status-msg" style="font-size: 16px; font-weight: bold; color: #333;">ハルが仕訳を考えています...</div>
+    </div>
+  </div>
 </body>
 </html>
